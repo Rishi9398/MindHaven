@@ -32,7 +32,7 @@ connectDB();
 const db = mysql.createConnection({
     host: process.env.MYSQL_HOST || "localhost", // MySQL host
     user: process.env.MYSQL_USER || "root", // MySQL user
-    password: process.env.MYSQL_PASSWORD || "password", // MySQL password
+    password: process.env.MYSQL_PASSWORD || "rishith", // MySQL password
     database: process.env.MYSQL_DATABASE || "auth_login", // MySQL database name
 });
 

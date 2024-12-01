@@ -53,7 +53,7 @@ const AuthDialog = ({ open, onClose }) => {
     } catch (error) {
       console.error("Error during API call:", error);
   
-      // Handle backend error message or show a generic error
+      // Handle backend error message or show a generic error in dialog box
       const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again.";
       alert(`Error: ${errorMessage}`);
     }

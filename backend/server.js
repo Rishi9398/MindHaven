@@ -8,6 +8,12 @@ const errorHandler = require('./config/errorHandler'); // Custom error handler
 const tasksRouter = require('./routers/tasksRouter'); // Tasks API routes
 const sosRouter = require('./routers/sosRouter'); // Optional SOS routes
 const authRouter = require('./routers/authRouter'); // MongoDB authentication routes
+const corsOptions = {
+    origin: "https://mind-haven-web.vercel.app", // Frontend origin
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+};
 
 // Load environment variables
 dotenv.config();
@@ -16,14 +22,11 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({
-    origin: "https://mind-haven-web.vercel.app", // Frontend's origin
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-}));
+app.use(cors(corsOptions));
 app.use(express.json()); // Parse incoming JSON requests
 app.use(bodyParser.json()); // Parse request bodies
 app.use(errorHandler); // Custom error handler middleware
+app.options("*", cors(corsOptions)); // Handle preflight requests
 
 // MongoDB Connection
 connectDB();
@@ -32,7 +35,7 @@ connectDB();
 const db = mysql.createConnection({
     host: process.env.MYSQL_HOST || "localhost", // MySQL host
     user: process.env.MYSQL_USER || "root", // MySQL user
-    password: process.env.MYSQL_PASSWORD || "rishith", // MySQL password
+    password: process.env.MYSQL_PASSWORD || "rishith    ", // MySQL password
     database: process.env.MYSQL_DATABASE || "auth_login", // MySQL database name
 });
 

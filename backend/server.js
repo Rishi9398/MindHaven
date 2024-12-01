@@ -9,15 +9,16 @@ const tasksRouter = require('./routers/tasksRouter');
 const sosRouter = require('./routers/sosRouter'); 
 const authRouter = require('./routers/authRouter'); 
 
+
 // Load environment variables
 dotenv.config();
 
 // CORS configuration
 const corsOptions = {
-    origin: "https://mind-haven-web.vercel.app", // Frontend origin
+    origin: "*", // Allow all origins (not recommended for production)
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // Allows credentials like cookies or authorization headers
+    credentials: true,
 };
 
 // Initialize express app
@@ -25,12 +26,16 @@ const app = express();
 
 // Middleware: Apply CORS before other middlewares or routes
 app.use(cors(corsOptions)); 
+
+// Preflight request handler (add this to handle preflight requests)
+app.options("*", cors(corsOptions)); // Handle preflight requests
+
+// Middleware: Parse JSON
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(errorHandler);
 
-// Preflight request handler (add this to handle preflight requests)
-app.options("*", cors(corsOptions)); // Handle preflight requests
+
 
 // MongoDB and MySQL Connections
 connectDB();

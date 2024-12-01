@@ -22,6 +22,7 @@ app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express.json()); // Parse incoming JSON requests
 app.use(bodyParser.json()); // Parse request bodies
 app.use(errorHandler); // Custom error handler middleware
+app.use(cors(corsOptions));
 
 // Routes
 app.use('/tasks', tasksRouter); // Tasks API routes
@@ -35,6 +36,13 @@ const db = mysql.createConnection({
     password: "rishith", // Replace with your MySQL password
     database: "auth_login", // Database name
 });
+
+// CORS configuration
+const corsOptions = {
+    origin: "https://mind-haven-web.vercel.app", // Frontend's origin
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+};
 
 // Connect to MySQL
 db.connect((err) => {

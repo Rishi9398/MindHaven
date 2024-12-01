@@ -67,24 +67,26 @@ const Navbar = () => {
           <Link to="/assessment" className="hover:text-blue-600">
             Assessment Test
           </Link>
+          <Link to="/video-recommendation" className="hover:text-blue-600">
+            Video Recommendation
+          </Link>
+          <Link to="/mood" className="hover:text-blue-600">
+            Mood Tracker
+          </Link>
           <Link to="/news" className="hover:text-blue-600">
             News
           </Link>
           <Link to="/tasks" className="hover:text-blue-600">
             Task Creation
           </Link>
-          <Link to="/mood" className="hover:text-blue-600">
-            Mood Tracker
-          </Link>
+
           <Link to="/sos" className="hover:text-blue-600">
             SOS
           </Link>
           <Link to={Chatbot} className="hover:text-blue-600">
             Chat Support
           </Link>
-          <Link to="/video-recommendation" className="hover:text-blue-600">
-            Video Recommendation
-          </Link>
+
 
         </div>
 
@@ -127,24 +129,26 @@ const Navbar = () => {
                 <Link to="/assessment" className="hover:text-blue-600">
                   Assessment Test
                 </Link>
+                <Link to="/video-recommendation" className="hover:text-blue-600">
+                  Video Recommendation
+                </Link>
+                <Link to="/mood" className="hover:text-blue-600">
+                  Mood Tracker
+                </Link>
                 <Link to="/news" className="hover:text-blue-600">
                   News
                 </Link>
                 <Link to="/tasks" className="hover:text-blue-600">
                   Task Creation
                 </Link>
-                <Link to="/mood" className="hover:text-blue-600">
-                  Mood Tracker
-                </Link>
+
                 <Link to="/sos" className="hover:text-blue-600">
                   SOS
                 </Link>
                 <Link to={Chatbot} className="hover:text-blue-600">
                   Chat Support
                 </Link>
-                <Link to="/video-recommendation" className="hover:text-blue-600">
-                  Video Recommendation
-                </Link>
+
 
               </div>
             </div>

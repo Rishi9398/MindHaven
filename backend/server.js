@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(errorHandler);
 
-// Preflight request handler
+// Preflight request handler (add this to handle preflight requests)
 app.options("*", cors(corsOptions)); // Handle preflight requests
 
 // MongoDB and MySQL Connections

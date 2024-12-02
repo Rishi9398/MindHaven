@@ -7,10 +7,8 @@ const tasksRouter = require('./routers/tasksRouter');
 const sosRouter = require('./routers/sosRouter'); // Add this if you need SOS routes
 const authRouter = require('./routers/authRouter'); // Add authRouter for login and registration
 
-// Load environment variables
-dotenv.config();
 
-// Connect to MongoDB
+dotenv.config();
 connectDB();
 
 const app = express();
@@ -22,7 +20,6 @@ app.use(errorHandler); // Custom error handler middleware
 
 // Routes
 app.use('/tasks', tasksRouter); // Tasks API routes
-app.use('/sos', sosRouter); // SOS API routes (optional, if needed)
 app.use('/auth', authRouter); // Authentication routes (login and registration)
 
 // Start the server

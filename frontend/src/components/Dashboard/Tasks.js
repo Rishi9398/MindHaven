@@ -24,21 +24,23 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       const response = await allAPIs.getTasks();
-      console.log("API Response:", response.data); // Log the response to debug
+      console.log("API Response:", response.data); // Debug API response
       const tasksByPriority = { High: [], Medium: [], Low: [] };
-  
+
       response.data.forEach((task) => {
-        tasksByPriority[task.priority].push(task);
+        if (tasksByPriority[task.priority]) {
+          tasksByPriority[task.priority].push(task);
+        } else {
+          console.warn(`Invalid priority "${task.priority}" for task:`, task);
+        }
       });
-  
+
       setTasks(tasksByPriority); // Update the state with fetched tasks
     } catch (error) {
-      console.error("Error fetching tasks:", error);
+      console.error("Error fetching tasks:", error.message); // Debug error
       setError("Failed to fetch tasks. Please try again.");
     }
   };
-  
-  
 
   // Handle task submission
   const handleAddTask = async (e) => {
@@ -64,6 +66,7 @@ const Tasks = () => {
         });
       }
     } catch (error) {
+      console.error("Error adding task:", error.message); // Debug error
       setError("Failed to add task. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -76,7 +79,7 @@ const Tasks = () => {
       await allAPIs.deleteTask(id);
       fetchTasks(); // Refresh task list after deletion
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error("Error deleting task:", error.message); // Debug error
       setError("Failed to delete task. Please try again.");
     }
   };

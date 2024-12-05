@@ -1,29 +1,28 @@
-require("dotenv").config();
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const errorHandler = require('./config/errorHandler');
 const tasksRouter = require('./routers/tasksRouter');
-const authRouter = require('./routers/authRouter');
+const sosRouter = require('./routers/sosRouter'); // Add this if you need SOS routes
+const authRouter = require('./routers/authRouter'); // Add authRouter for login and registration
+
+// Load environment variables
+dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
-const cors = require("cors");
-const connection = require("./config/db");
-const userRoutes = require("./routes/users");
-const authRoutes = require("./routes/auth");
 
-
-dotenv.config();
-connectDB();
-connection();
-
-app.use(cors()); 
-app.use(express.json()); 
-app.use(errorHandler); 
+// Middleware
+app.use(cors()); // Enable CORS for cross-origin requests
+app.use(express.json()); // Parse incoming JSON requests
+app.use(errorHandler); // Custom error handler middleware
 
 // Routes
 app.use('/tasks', tasksRouter); // Tasks API routes
+app.use('/sos', sosRouter); // SOS API routes (optional, if needed)
 app.use('/auth', authRouter); // Authentication routes (login and registration)
 
 // Start the server

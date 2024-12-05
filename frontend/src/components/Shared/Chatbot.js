@@ -17,49 +17,33 @@ const Chatbot = () => {
     }
   }, [isOpen]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!input.trim()) return;
 
     const userMessage = { text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
 
-    const botResponse = await fetchBotResponse(input);
+    const botResponse = getBotResponse(input);
     setMessages((prev) => [...prev, { text: botResponse, sender: "bot" }]);
     setInput("");
   };
 
-  const fetchBotResponse = async (userInput) => {
-    const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
-    const GOOGLE_AI_URL = `https://aistudio.googleapis.com/v1/sessions:detectIntent?key=${API_KEY}`;
+  const getBotResponse = (userInput) => {
+    
+    const responses = {
+      "how are you": "I'm just a bot, but I'm here to help you feel your best!",
+      "how can i manage stress": "Managing stress involves regular exercise, mindfulness, deep breathing, and maintaining a balanced diet. Do something you enjoy every day!",
+      "what are some tips for better sleep": "For better sleep, try maintaining a consistent sleep schedule, avoiding screens before bed, and creating a relaxing bedtime routine.",
+      "how do i stay motivated": "Staying motivated can be tough. Set realistic goals, celebrate small wins, and remind yourself why you started!",
+      "what are healthy eating habits": "Healthy eating habits include eating more fruits and vegetables, staying hydrated, and avoiding processed foods as much as possible.",
+      "how do i improve mental health": "Improving mental health can involve talking to loved ones, practicing mindfulness, seeking therapy, or engaging in activities you love.",
+    };
 
-    try {
-      const response = await fetch(GOOGLE_AI_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          queryInput: {
-            text: {
-              text: userInput,
-              languageCode: "en-US",
-            },
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.queryResult) {
-        return data.queryResult.fulfillmentText || "Sorry, I didn't understand that.";
-      }
-
-      console.error("Error from API:", data.error);
-      return "I'm sorry, I couldn't process your query.";
-    } catch (error) {
-      console.error("Error fetching response from server:", error);
-      return "Oops! Something went wrong. Please try again later.";
-    }
+    const lowerInput = userInput.toLowerCase();
+    return (
+      responses[lowerInput] ||
+      "I'm sorry, I don't have an answer for that. Try asking me something else about mental or physical well-being!"
+    );
   };
 
   return (

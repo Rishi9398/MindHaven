@@ -1,11 +1,17 @@
+require("dotenv").config();
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const errorHandler = require('./config/errorHandler');
 const tasksRouter = require('./routers/tasksRouter');
+const authRouter = require('./routers/authRouter');
 
-const authRouter = require('./routers/authRouter'); // Add authRouter for login and registration
+const app = express();
+const cors = require("cors");
+const connection = require("./db");
+const userRoutes = require("./routes/users");
+const authRoutes = require("./routes/auth");
 
 
 dotenv.config();
@@ -15,8 +21,8 @@ const app = express();
 
 
 app.use(cors()); 
-app.use(express.json()); // Parse incoming JSON requests
-app.use(errorHandler); // Custom error handler middleware
+app.use(express.json()); 
+app.use(errorHandler); 
 
 // Routes
 app.use('/tasks', tasksRouter); // Tasks API routes

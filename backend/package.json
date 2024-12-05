@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.3",
     "mysql2": "^3.11.5",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "joi": "^17.5.0",
+    "joi-password-complexity": "^5.1.0",
+    "nodemon": "^2.0.15"
   }
 }

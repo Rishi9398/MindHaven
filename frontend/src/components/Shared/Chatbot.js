@@ -17,26 +17,52 @@ const Chatbot = () => {
     }
   }, [isOpen]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage = { text: input, sender: "user" };
+  const handleSend = (message) => {
+    const userMessage = { text: message || input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
 
-    const botResponse = getBotResponse(input);
+    const botResponse = getBotResponse(message || input);
     setMessages((prev) => [...prev, { text: botResponse, sender: "bot" }]);
     setInput("");
   };
 
   const getBotResponse = (userInput) => {
-    
     const responses = {
       "how are you": "I'm just a bot, but I'm here to help you feel your best!",
-      "how can i manage stress": "Managing stress involves regular exercise, mindfulness, deep breathing, and maintaining a balanced diet. Do something you enjoy every day!",
-      "what are some tips for better sleep": "For better sleep, try maintaining a consistent sleep schedule, avoiding screens before bed, and creating a relaxing bedtime routine.",
-      "how do i stay motivated": "Staying motivated can be tough. Set realistic goals, celebrate small wins, and remind yourself why you started!",
-      "what are healthy eating habits": "Healthy eating habits include eating more fruits and vegetables, staying hydrated, and avoiding processed foods as much as possible.",
-      "how do i improve mental health": "Improving mental health can involve talking to loved ones, practicing mindfulness, seeking therapy, or engaging in activities you love.",
+      "how can i manage stress":
+        "Managing stress involves regular exercise, mindfulness, deep breathing, and maintaining a balanced diet. Do something you enjoy every day!",
+      "what are some tips for better sleep":
+        "For better sleep, maintain a consistent sleep schedule, avoid screens before bed, and create a relaxing bedtime routine.",
+      "how do i stay motivated":
+        "Set realistic goals, celebrate small wins, and remind yourself why you started!",
+      "what are healthy eating habits":
+        "Healthy eating habits include eating more fruits and vegetables, staying hydrated, and avoiding processed foods.",
+      "how do i improve mental health":
+        "Improving mental health involves talking to loved ones, practicing mindfulness, seeking therapy, or engaging in activities you love.",
+      "what is mindfulness":
+        "Mindfulness means staying present in the moment without judgment. It helps reduce stress and improve focus.",
+      "how do i deal with anxiety":
+        "To deal with anxiety, practice deep breathing, focus on what you can control, and talk to someone you trust.",
+      "what are the benefits of exercise":
+        "Exercise boosts mood, improves sleep, increases energy, and helps manage stress.",
+      "how do i build confidence":
+        "Building confidence takes time. Focus on your strengths, set achievable goals, and take small steps toward your dreams.",
+      "what is self-care":
+        "Self-care is about taking time for yourself—whether that's relaxing, exercising, or doing something you love.",
+      "how can i stay positive":
+        "Practice gratitude, surround yourself with supportive people, and focus on what makes you happy.",
+      "what are the effects of social media on mental health":
+        "Social media can both connect and stress us. Take breaks when needed and focus on meaningful interactions.",
+      "how do i deal with burnout":
+        "Burnout can be managed by prioritizing self-care, setting boundaries, and seeking help when needed.",
+      "what are ways to relax":
+        "Relaxation techniques include deep breathing, meditation, yoga, or simply spending time in nature.",
+      "how can i balance work and life":
+        "Balance work and life by setting priorities, taking breaks, and making time for hobbies and loved ones.",
+      "how do i boost energy levels naturally":
+        "Boost energy by staying hydrated, eating nutritious foods, exercising, and getting enough sleep.",
+      "what are signs of depression":
+        "Signs include persistent sadness, loss of interest in activities, fatigue, and changes in sleep or appetite. Consider reaching out to a professional for help.",
     };
 
     const lowerInput = userInput.toLowerCase();
@@ -46,9 +72,16 @@ const Chatbot = () => {
     );
   };
 
+  const suggestedQuestions = [
+    "How can I manage stress",
+    "What are some tips for better sleep",
+    "How do I stay motivated",
+    "What are healthy eating habits",
+  ];
+
   return (
     <>
-      {/* Chat Icon to Open Chatbot */}
+      
       <div
         className="fixed bottom-5 right-5 z-50 cursor-pointer bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-600"
         onClick={() => setIsOpen(true)}
@@ -59,7 +92,7 @@ const Chatbot = () => {
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
           <div className="bg-white w-full max-w-md rounded-lg shadow-lg relative">
-            {/* Chatbot Header */}
+        
             <div className="flex justify-between items-center p-4 bg-blue-500 text-white rounded-t-lg">
               <h2 className="text-lg font-bold">Chat with MindHaven</h2>
               <button
@@ -92,6 +125,22 @@ const Chatbot = () => {
               ))}
             </div>
 
+            {/* Suggestions for Questions */}
+            <div className="p-4 border-t bg-gray-100">
+              <p className="mb-2 text-gray-600">You can ask:</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestedQuestions.map((question, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSend(question)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded-lg"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Chat Input */}
             <div className="flex p-4 border-t">
               <input
@@ -103,7 +152,7 @@ const Chatbot = () => {
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
               />
               <button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
               >
                 Send

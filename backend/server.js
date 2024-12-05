@@ -1,30 +1,36 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const errorHandler = require('./config/errorHandler');
-const tasksRouter = require('./routers/tasksRouter');
-const sosRouter = require('./routers/sosRouter'); // Add this if you need SOS routes
-const authRouter = require('./routers/authRouter'); // Add authRouter for login and registration
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db"); // MongoDB connection function
+const errorHandler = require("./config/errorHandler"); // Custom error handler
+const tasksRouter = require("./routers/tasksRouter"); // Tasks API routes
+const sosRouter = require("./routers/sosRouter"); // SOS API routes (optional)
+const authRouter = require("./routers/authRouter"); // Authentication routes
+const userRoutes = require("./routes/users"); // User management routes
+const authRoutes = require("./routes/auth"); // Additional authentication routes
 
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
-// Connect to MongoDB
+// Connect to the database
 connectDB();
 
+// Initialize Express app
 const app = express();
 
-// Middleware
-app.use(cors()); // Enable CORS for cross-origin requests
-app.use(express.json()); // Parse incoming JSON requests
-app.use(errorHandler); // Custom error handler middleware
+// Apply middlewares
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON request bodies
+app.use(errorHandler); // Handle custom errors
 
-// Routes
-app.use('/tasks', tasksRouter); // Tasks API routes
-app.use('/sos', sosRouter); // SOS API routes (optional, if needed)
-app.use('/auth', authRouter); // Authentication routes (login and registration)
+// Define API routes
+app.use("/api/tasks", tasksRouter); // Tasks API endpoints
+app.use("/api/sos", sosRouter); // SOS API endpoints (optional)
+app.use("/api/auth", authRouter); // Authentication routes (login/register)
+app.use("/api/users", userRoutes); // User management routes
 
 // Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}...`);
+});

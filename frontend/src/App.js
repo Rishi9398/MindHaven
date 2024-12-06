@@ -10,7 +10,7 @@ import Chatbot from "./components/Shared/Chatbot";
 import VideoRecommendation from "./pages/VideoRecommendation";
 import Assignment from "./pages/Assignment";
 import MoodTracker from "./components/Dashboard/MoodTracker.js";
-import Main from "./components/Shared/index.jsx";
+import Main from "./index.jsx";
 import Signup from "./components/Signup";
 import Login from "./components/Login";
 

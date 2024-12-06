@@ -1,13 +1,13 @@
 const mysql = require('mysql2');
 
-// Create a connection to the database
+
 const connection = mysql.createConnection({
-  host: 'localhost', // Replace with your host
-  user: 'root',      // Replace with your MySQL username
-  password: 'rishith', // Replace with your MySQL password
+  host: 'localhost', 
+  user: 'root',      
+  password: 'rishith', 
 });
 
-// Connect to the database
+
 connection.connect((err) => {
   if (err) {
     console.error('Error connecting to MySQL:', err);
@@ -15,7 +15,7 @@ connection.connect((err) => {
   }
   console.log('Connected to MySQL');
 
-  // Create the database
+
   connection.query('CREATE DATABASE IF NOT EXISTS auth_login', (err) => {
     if (err) {
       console.error('Error creating database:', err);

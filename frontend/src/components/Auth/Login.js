@@ -13,28 +13,16 @@ import {
   Typography,
   Link,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, AccountCircle } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import { supabase } from "../../supabaseClient"; // Import Supabase client
 
-const AuthDialog = ({ open, onClose }) => {
+const AuthDialog = ({ open, onClose, user, setUser }) => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Register
   const [username, setUsername] = useState(""); // Track username
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [user, setUser] = useState(null); // Store authenticated user info
-
-  // Fetch user info on component mount
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-    };
-    fetchSession();
-  }, []);
 
   const handleToggle = () => {
     setIsLogin(!isLogin);
@@ -46,50 +34,38 @@ const AuthDialog = ({ open, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let response;
-
       if (isLogin) {
-        // Login with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
-
-        console.log("Login successful:", data);
         setUser(data.user); // Set authenticated user
         alert("Login successful!");
       } else {
-        // Register with Supabase
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { username } },
         });
 
         if (error) throw error;
-
-        console.log("Registration successful:", data);
         alert("Registration successful! Please check your email for verification.");
       }
-
-      // Close the dialog on success
-      onClose();
+      onClose(); // Close dialog after success
     } catch (error) {
       console.error("Error during API call:", error);
-
-      const errorMessage = error.message || "An unexpected error occurred. Please try again.";
-      alert(`Error: ${errorMessage}`);
+      alert(`Error: ${error.message || "An unexpected error occurred."}`);
     }
   };
-
-  const handleClickShowPassword = () => setShowPassword(!showPassword);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null); // Clear user info
   };
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -181,17 +157,45 @@ const AuthDialog = ({ open, onClose }) => {
               </Button>
             </form>
           )}
-
-          <Typography variant="body2" align="center">
-            {isLogin ? "Don’t have an account? " : "Already have an account? "}
-            <Link href="#" underline="hover" color="primary" onClick={handleToggle}>
-              {isLogin ? "Sign up now" : "Sign in"}
-            </Link>
-          </Typography>
+          {!user && (
+            <Typography variant="body2" align="center">
+              {isLogin ? "Don’t have an account? " : "Already have an account? "}
+              <Link href="#" underline="hover" color="primary" onClick={handleToggle}>
+                {isLogin ? "Sign up now" : "Sign in"}
+              </Link>
+            </Typography>
+          )}
         </DialogContent>
       </Box>
     </Dialog>
   );
 };
 
-export default AuthDialog;
+const ParentComponent = () => {
+  const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  return (
+    <>
+      {user ? (
+        <IconButton color="primary" onClick={handleOpen}>
+          <AccountCircle />
+        </IconButton>
+      ) : (
+        <Button variant="contained" onClick={handleOpen}>
+          Login
+        </Button>
+      )}
+      <AuthDialog open={open} onClose={handleClose} user={user} setUser={setUser} />
+    </>
+  );
+};
+
+
+export { AuthDialog };
+
+
+export default ParentComponent;

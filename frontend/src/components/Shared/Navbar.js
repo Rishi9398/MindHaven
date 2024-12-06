@@ -6,11 +6,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
+import Login from "../Auth/Login"; // Import Login modal
 
-const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
+const Navbar = ({ user, setUser }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false); // State to control login modal
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+  const handleLoginClick = () => setLoginOpen(true); // Open login modal
+  const handleCloseLogin = () => setLoginOpen(false); // Close login modal
 
   return (
     <>
@@ -43,7 +47,10 @@ const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
             {user ? (
               <div
                 className="flex items-center gap-2 cursor-pointer hover:text-black"
-                onClick={onLogoutClick} // Logout handler
+                onClick={async () => {
+                  await supabase.auth.signOut(); // Use Supabase to log out
+                  setUser(null); // Clear the user state
+                }}
               >
                 <AccountCircleIcon fontSize="medium" />
                 <span className="text-lg text-black">Logout</span>
@@ -51,7 +58,7 @@ const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
             ) : (
               <div
                 className="flex items-center gap-2 cursor-pointer hover:text-black"
-                onClick={onLoginClick} // Open login dialog
+                onClick={handleLoginClick} // Open login modal
               >
                 <PersonOutlineIcon fontSize="medium" />
                 <span className="text-lg text-black">Login</span>
@@ -92,71 +99,10 @@ const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
             Chat Support
           </Link>
         </div>
-
-        {menuOpen && (
-          <div className="lg:hidden mt-4 bg-gray-100 text-gray-700 rounded-lg p-4 shadow-md">
-            <div className="flex flex-col gap-4">
-              <div className="relative">
-                <div className="flex items-center border border-gray-400 rounded-lg px-4 py-2">
-                  <SearchIcon className="text-black" />
-                  <input
-                    type="text"
-                    placeholder="Search here"
-                    className="ml-2 w-full text-gray-600 placeholder-gray-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 cursor-pointer hover:text-black">
-                <NotificationsNoneIcon fontSize="medium" />
-                <span>Notification</span>
-              </div>
-              {user ? (
-                <div
-                  className="flex items-center gap-2 cursor-pointer hover:text-black"
-                  onClick={onLogoutClick} // Logout handler
-                >
-                  <AccountCircleIcon fontSize="medium" />
-                  <span>Logout</span>
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-2 cursor-pointer hover:text-black"
-                  onClick={onLoginClick} // Open login dialog
-                >
-                  <PersonOutlineIcon fontSize="medium" />
-                  <span>Login</span>
-                </div>
-              )}
-              <div className="flex flex-col gap-2 text-lg">
-                <Link to="/" className="hover:text-blue-600">
-                  Home
-                </Link>
-                <Link to="/assessment" className="hover:text-blue-600">
-                  Assessment Test
-                </Link>
-                <Link to="/video-recommendation" className="hover:text-blue-600">
-                  Video Recommendation
-                </Link>
-                <Link to="/mood" className="hover:text-blue-600">
-                  Mood Tracker
-                </Link>
-                <Link to="/news" className="hover:text-blue-600">
-                  News
-                </Link>
-                <Link to="/tasks" className="hover:text-blue-600">
-                  Task Creation
-                </Link>
-                <Link to="/sos" className="hover:text-blue-600">
-                  SOS
-                </Link>
-                <Link to="/chat" className="hover:text-blue-600">
-                  Chat Support
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
       </nav>
+
+      {/* Login Modal */}
+      <Login open={loginOpen} onClose={handleCloseLogin} setUser={setUser} />
     </>
   );
 };

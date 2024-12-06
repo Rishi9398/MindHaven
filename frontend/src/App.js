@@ -10,28 +10,14 @@ import Chatbot from "./components/Shared/Chatbot";
 import VideoRecommendation from "./pages/VideoRecommendation";
 import Assignment from "./pages/Assignment";
 import MoodTracker from "./components/Dashboard/MoodTracker";
-import AuthDialog from "./components/Auth/Login"; // Use the AuthDialog for login
 
 const App = () => {
-  const [user, setUser] = useState(null); // Centralized user state
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-
-  const handleLoginOpen = () => setAuthDialogOpen(true);
-  const handleLoginClose = () => setAuthDialogOpen(false);
-
-  const handleLogout = async () => {
-    setUser(null);
-    alert("Logged out successfully!");
-  };
+  const [user, setUser] = useState(null); // User state
 
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
-        <Navbar
-          user={user}
-          onLoginClick={handleLoginOpen}
-          onLogoutClick={handleLogout}
-        />
+        <Navbar user={user} setUser={setUser} />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -46,14 +32,6 @@ const App = () => {
         </main>
         <Footer />
       </div>
-
-      {/* Auth Dialog */}
-      <AuthDialog
-        open={authDialogOpen}
-        onClose={handleLoginClose}
-        user={user}
-        setUser={setUser}
-      />
     </Router>
   );
 };

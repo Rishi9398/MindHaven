@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 
 const MoodTracker = () => {
@@ -6,20 +6,22 @@ const MoodTracker = () => {
   const [journalEntry, setJournalEntry] = useState("");
   const [moodDescription, setMoodDescription] = useState("Neutral 🙂 Neither happy nor sad.");
   const [moodEntries, setMoodEntries] = useState([]);
-  const [userEmail, setUserEmail] = useState(null); // Store logged-in user's email
+  const [user, setUser] = useState(null); // Track logged-in user
 
+  // Track real-time login/logout
   useEffect(() => {
-    // Fetch user details on component load
     const fetchUser = async () => {
-      const user = supabase.auth.user(); // Get the logged-in user from Supabase
-      if (user) {
-        setUserEmail(user.email); // Set the user's email
-      } else {
-        alert("Please log in first.");
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
     };
 
     fetchUser();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   const handleMoodChange = (e) => {
@@ -43,7 +45,7 @@ const MoodTracker = () => {
   };
 
   const handleSaveEntry = async () => {
-    if (!userEmail) {
+    if (!user) {
       alert("Please log in first.");
       return;
     }
@@ -53,11 +55,11 @@ const MoodTracker = () => {
         .from("mood_entries")
         .insert([
           {
-            email: userEmail, // Associate entry with the logged-in user's email
+            email: user.email,
             mood_value: moodValue,
             mood_description: moodDescription,
             journal_entry: journalEntry,
-            created_at: new Date().toISOString(), // Include a timestamp
+            created_at: new Date().toISOString(),
           },
         ]);
 
@@ -66,22 +68,22 @@ const MoodTracker = () => {
       }
 
       alert("Mood Saved!");
-      setJournalEntry(""); // Reset the journal entry field
-      fetchMoodEntries(); // Refresh mood entries
+      setJournalEntry("");
+      fetchMoodEntries();
     } catch (error) {
       console.error("Error saving mood entry:", error);
       alert("Error saving mood entry!");
     }
   };
 
-  const fetchMoodEntries = useCallback(async () => {
-    if (!userEmail) return;
+  const fetchMoodEntries = async () => {
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from("mood_entries")
         .select("*")
-        .eq("email", userEmail) // Fetch entries for the logged-in user
+        .eq("email", user.email)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -92,11 +94,13 @@ const MoodTracker = () => {
     } catch (error) {
       console.error("Error fetching mood entries:", error);
     }
-  }, [userEmail]);
+  };
 
   useEffect(() => {
-    fetchMoodEntries();
-  }, [fetchMoodEntries]);
+    if (user) {
+      fetchMoodEntries();
+    }
+  }, [user]);
 
   const handleDeleteEntry = async (id) => {
     try {
@@ -109,7 +113,7 @@ const MoodTracker = () => {
         throw error;
       }
 
-      fetchMoodEntries(); // Refresh mood entries after deletion
+      fetchMoodEntries();
     } catch (error) {
       console.error("Error deleting mood entry:", error);
       alert("Error deleting entry!");
@@ -119,6 +123,10 @@ const MoodTracker = () => {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold text-center mb-6">Mood Tracker</h1>
+
+      {!user && (
+        <p className="text-red-500 text-center mb-4">You need to log in to save your mood entries.</p>
+      )}
 
       <div className="bg-white p-4 shadow rounded-md mb-6">
         <label className="block text-sm font-medium mb-2">Rate Your Mood:</label>
@@ -149,6 +157,7 @@ const MoodTracker = () => {
       <button
         onClick={handleSaveEntry}
         className="bg-blue-600 text-white py-2 px-4 rounded-md w-full hover:bg-blue-700 transition"
+        disabled={!user}
       >
         Save Mood
       </button>

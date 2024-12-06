@@ -90,11 +90,10 @@ const Navbar = () => {
 
         </div>
 
-        {/* Mobile Menu */}
         {menuOpen && (
           <div className="lg:hidden mt-4 bg-gray-100 text-gray-700 rounded-lg p-4 shadow-md">
             <div className="flex flex-col gap-4">
-              {/* Search */}
+              
               <div className="relative">
                 <div className="flex items-center border border-gray-400 rounded-lg px-4 py-2">
                   <SearchIcon className="text-black" />
@@ -106,7 +105,6 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* Notification */}
               <div className="flex items-center gap-2 cursor-pointer hover:text-black">
                 <NotificationsNoneIcon fontSize="medium" />
                 <span>Notification</span>

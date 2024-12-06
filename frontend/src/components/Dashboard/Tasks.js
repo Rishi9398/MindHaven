@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../supabaseClient"; // Import Supabase client
+import { supabase } from "../../supabaseClient";
 
 const Tasks = () => {
   const [formData, setFormData] = useState({
@@ -66,17 +66,7 @@ const Tasks = () => {
   };
 
   // Add task to Supabase
-  const handleAddTask = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    if (!user) {
-      alert("Please log in to add tasks.");
-      setIsSubmitting(false);
-      return;
-    }
-
+  const addTaskToSupabase = async () => {
     const createdDate = new Date().toISOString();
     const newTask = {
       taskName: formData.taskName,
@@ -106,7 +96,7 @@ const Tasks = () => {
   };
 
   // Delete task from Supabase
-  const handleDeleteTask = async (id) => {
+  const deleteTaskFromSupabase = async (id) => {
     try {
       const { error } = await supabase.from("tasks").delete().eq("id", id);
       if (error) throw error;
@@ -142,7 +132,12 @@ const Tasks = () => {
         {/* Task Form */}
         {user ? (
           <form
-            onSubmit={handleAddTask}
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              setError(null);
+              addTaskToSupabase();
+            }}
             className="flex flex-col gap-4 md:flex-row md:gap-4"
           >
             <input
@@ -212,7 +207,7 @@ const Tasks = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleDeleteTask(task.id)}
+                      onClick={() => deleteTaskFromSupabase(task.id)}
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                     >
                       Delete

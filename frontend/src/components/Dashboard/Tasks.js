@@ -1,119 +1,126 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient"; // Import Supabase client
 
-const TaskDashboard = () => {
-  const [formData, setFormData] = useState({
-    title: "",
+const TaskManager = () => {
+  const [taskForm, setTaskForm] = useState({
+    taskTitle: "",
     priority: "Medium",
-    deadline: "",
+    dueDate: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [taskList, setTaskList] = useState({ High: [], Medium: [], Low: [] });
-  const [user, setUser] = useState(null); // Track logged-in user
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
-  // Track real-time login/logout
+  // Track real-time user session
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
+      setLoggedInUser(session?.user || null);
     };
 
     fetchUser();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setLoggedInUser(session?.user || null);
     });
 
-    return () => subscription?.unsubscribe();
+    return () => authListener?.unsubscribe();
   }, []);
 
-  // Handle form input changes
+  // Handle input change for form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
+    setTaskForm((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
-  // Fetch tasks from Supabase
-  const fetchTasks = async () => {
-    if (!user) return;
+  // Fetch tasks associated with logged-in user
+  const loadTasks = async () => {
+    if (!loggedInUser) return;
 
     try {
       const { data, error } = await supabase
-        .from("task_entries") // Assuming the table is named "task_entries"
+        .from("tasks")
         .select("*")
-        .eq("user_email", user.email); // Fetch tasks for the logged-in user
+        .eq("user_email", loggedInUser.email);
       if (error) throw error;
 
-      const tasksByPriority = { High: [], Medium: [], Low: [] };
-
+      const categorizedTasks = { High: [], Medium: [], Low: [] };
       data.forEach((task) => {
-        if (tasksByPriority[task.priority]) {
-          tasksByPriority[task.priority].push(task);
+        if (categorizedTasks[task.priority]) {
+          categorizedTasks[task.priority].push(task);
         } else {
-          console.warn(`Invalid priority "${task.priority}" for task:`, task);
+          console.warn(`Unexpected priority "${task.priority}" for task:`, task);
         }
       });
 
-      setTaskList(tasksByPriority);
-    } catch (error) {
-      console.error("Error fetching tasks:", error.message);
-      setError("Failed to fetch tasks. Please try again.");
+      setTaskList(categorizedTasks);
+    } catch (err) {
+      console.error("Error loading tasks:", err.message);
+      setErrorMessage("Failed to load tasks. Please try again.");
     }
   };
 
-  // Add task to Supabase
-  const addTaskToSupabase = async () => {
-    const createdAt = new Date().toISOString();
-    const newTask = {
-      title: formData.title,
-      priority: formData.priority,
-      deadline: formData.deadline,
-      created_at: createdAt,
-      user_email: user.email, // Associate task with logged-in user's email
+  // Add a new task
+  const addTask = async () => {
+    if (!loggedInUser) {
+      alert("Please log in to add tasks.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const currentDate = new Date().toISOString();
+    const newTaskData = {
+      title: taskForm.taskTitle,
+      priority: taskForm.priority,
+      dueDate: taskForm.dueDate,
+      created_at: currentDate,
+      user_email: loggedInUser.email,
     };
 
     try {
-      const { error } = await supabase.from("task_entries").insert([newTask]);
+      const { error } = await supabase.from("tasks").insert([newTaskData]);
       if (error) throw error;
 
-      alert("Task added successfully");
-      fetchTasks(); // Refresh tasks
-      setFormData({
-        title: "",
+      alert("Task added successfully!");
+      setTaskForm({
+        taskTitle: "",
         priority: "Medium",
-        deadline: "",
+        dueDate: "",
       });
-    } catch (error) {
-      console.error("Error adding task:", error.message);
-      setError("Failed to add task. Please try again.");
+      loadTasks();
+    } catch (err) {
+      console.error("Error adding task:", err.message);
+      setErrorMessage("Failed to add task. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  // Delete task from Supabase
-  const deleteTaskFromSupabase = async (id) => {
+  // Delete a task by ID
+  const deleteTask = async (taskId) => {
     try {
-      const { error } = await supabase.from("task_entries").delete().eq("id", id);
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
       if (error) throw error;
 
-      fetchTasks(); // Refresh tasks after deletion
-    } catch (error) {
-      console.error("Error deleting task:", error.message);
-      setError("Failed to delete task. Please try again.");
+      loadTasks(); // Refresh task list after deletion
+    } catch (err) {
+      console.error("Error deleting task:", err.message);
+      setErrorMessage("Failed to delete task. Please try again.");
     }
   };
 
   // Fetch tasks when user logs in
   useEffect(() => {
-    if (user) {
-      fetchTasks();
+    if (loggedInUser) {
+      loadTasks();
     }
-  }, [user]);
+  }, [loggedInUser]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -122,40 +129,38 @@ const TaskDashboard = () => {
           Task Dashboard
         </h2>
 
-        {/* Error Display */}
-        {error && (
+        {/* Display error messages */}
+        {errorMessage && (
           <div className="bg-red-500 text-white p-4 rounded-md mb-4">
-            <p>{error}</p>
+            <p>{errorMessage}</p>
           </div>
         )}
 
         {/* Task Form */}
-        {user ? (
+        {loggedInUser ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setIsSubmitting(true);
-              setError(null);
-              addTaskToSupabase();
+              addTask();
             }}
             className="flex flex-col gap-4 md:flex-row md:gap-4"
           >
             <input
               type="text"
-              name="title"
-              placeholder="Enter Task Title"
-              value={formData.title}
+              name="taskTitle"
+              placeholder="Enter Task"
+              value={taskForm.taskTitle}
               onChange={handleInputChange}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
             <select
               name="priority"
-              value={formData.priority}
+              value={taskForm.priority}
               onChange={handleInputChange}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="High">High Priority</option>
               <option value="Medium">Medium Priority</option>
@@ -164,19 +169,19 @@ const TaskDashboard = () => {
 
             <input
               type="date"
-              name="deadline"
-              value={formData.deadline}
+              name="dueDate"
+              value={taskForm.dueDate}
               onChange={handleInputChange}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition duration-200 disabled:bg-gray-400"
+              disabled={isLoading}
+              className="w-full bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition duration-200 disabled:bg-gray-400"
             >
-              {isSubmitting ? "Adding Task..." : "Add Task"}
+              {isLoading ? "Adding Task..." : "Add Task"}
             </button>
           </form>
         ) : (
@@ -202,12 +207,12 @@ const TaskDashboard = () => {
                   <div>
                     <p className="font-semibold">{task.title}</p>
                     <p className="text-sm text-gray-600">
-                      Due: {task.deadline.split("T")[0]}
+                      Due: {task.dueDate.split("T")[0]}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => deleteTaskFromSupabase(task.id)}
+                      onClick={() => deleteTask(task.id)}
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                     >
                       Delete
@@ -223,4 +228,4 @@ const TaskDashboard = () => {
   );
 };
 
-export default TaskDashboard;
+export default TaskManager;

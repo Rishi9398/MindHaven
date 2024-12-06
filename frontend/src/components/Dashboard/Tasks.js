@@ -10,6 +10,23 @@ const Tasks = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [tasks, setTasks] = useState({ High: [], Medium: [], Low: [] });
+  const [user, setUser] = useState(null); // Track logged-in user
+
+  // Track real-time login/logout
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+
+    fetchUser();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -20,10 +37,15 @@ const Tasks = () => {
     }));
   };
 
-  // Fetch tasks from the Supabase table
+  // Fetch tasks from Supabase
   const fetchTasks = async () => {
+    if (!user) return;
+
     try {
-      const { data, error } = await supabase.from("tasks").select("*");
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("email", user.email); // Fetch tasks for the logged-in user
       if (error) throw error;
 
       const tasksByPriority = { High: [], Medium: [], Low: [] };
@@ -36,22 +58,21 @@ const Tasks = () => {
         }
       });
 
-      setTasks(tasksByPriority); // Update state with fetched tasks
+      setTasks(tasksByPriority);
     } catch (error) {
       console.error("Error fetching tasks:", error.message);
       setError("Failed to fetch tasks. Please try again.");
     }
   };
 
-  // Handle task submission
+  // Add task to Supabase
   const handleAddTask = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    // Validate formData
-    if (!formData.taskName || !formData.priority || !formData.dueDate) {
-      alert("Please fill out all fields.");
+    if (!user) {
+      alert("Please log in to add tasks.");
       setIsSubmitting(false);
       return;
     }
@@ -62,49 +83,47 @@ const Tasks = () => {
       priority: formData.priority,
       dueDate: formData.dueDate,
       createdDate,
+      email: user.email, // Associate task with logged-in user's email
     };
 
-    console.log("Task being sent to Supabase:", newTask); // Debug task data
-
     try {
-      const { data, error } = await supabase.from("tasks").insert([newTask]);
-      if (error) {
-        console.error("Supabase insert error:", error.message); // Log the error
-        throw error;
-      }
+      const { error } = await supabase.from("tasks").insert([newTask]);
+      if (error) throw error;
 
       alert("Task added successfully");
-      fetchTasks(); // Refresh task list
+      fetchTasks(); // Refresh tasks
       setFormData({
         taskName: "",
         priority: "Medium",
         dueDate: "",
       });
     } catch (error) {
-      console.error("Error adding task:", error.message); // Debug error
+      console.error("Error adding task:", error.message);
       setError("Failed to add task. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle task deletion
+  // Delete task from Supabase
   const handleDeleteTask = async (id) => {
     try {
       const { error } = await supabase.from("tasks").delete().eq("id", id);
       if (error) throw error;
 
-      fetchTasks(); // Refresh task list after deletion
+      fetchTasks(); // Refresh tasks after deletion
     } catch (error) {
       console.error("Error deleting task:", error.message);
       setError("Failed to delete task. Please try again.");
     }
   };
 
-  // Fetch tasks on component mount
+  // Fetch tasks when user logs in
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (user) {
+      fetchTasks();
+    }
+  }, [user]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -121,49 +140,55 @@ const Tasks = () => {
         )}
 
         {/* Task Form */}
-        <form
-          onSubmit={handleAddTask}
-          className="flex flex-col gap-4 md:flex-row md:gap-4"
-        >
-          <input
-            type="text"
-            name="taskName"
-            placeholder="Enter Task"
-            value={formData.taskName}
-            onChange={handleInputChange}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-
-          <select
-            name="priority"
-            value={formData.priority}
-            onChange={handleInputChange}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+        {user ? (
+          <form
+            onSubmit={handleAddTask}
+            className="flex flex-col gap-4 md:flex-row md:gap-4"
           >
-            <option value="High">High Priority</option>
-            <option value="Medium">Medium Priority</option>
-            <option value="Low">Low Priority</option>
-          </select>
+            <input
+              type="text"
+              name="taskName"
+              placeholder="Enter Task"
+              value={formData.taskName}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
 
-          <input
-            type="date"
-            name="dueDate"
-            value={formData.dueDate}
-            onChange={handleInputChange}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+            <select
+              name="priority"
+              value={formData.priority}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="High">High Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition duration-200 disabled:bg-gray-400"
-          >
-            {isSubmitting ? "Adding Task..." : "Add Task"}
-          </button>
-        </form>
+            <input
+              type="date"
+              name="dueDate"
+              value={formData.dueDate}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition duration-200 disabled:bg-gray-400"
+            >
+              {isSubmitting ? "Adding Task..." : "Add Task"}
+            </button>
+          </form>
+        ) : (
+          <p className="text-center text-red-500 font-medium">
+            Please log in to manage tasks.
+          </p>
+        )}
       </div>
 
       {/* Task List by Priority */}
@@ -186,12 +211,6 @@ const Tasks = () => {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => alert(`Edit task with ID: ${task.id}`)}
-                      className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                    >
-                      Edit
-                    </button>
                     <button
                       onClick={() => handleDeleteTask(task.id)}
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"

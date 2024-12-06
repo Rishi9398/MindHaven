@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
-import axios from "axios";  // Import axios
+import { supabase } from "../../supabaseClient"; // Import Supabase client
 
 const AuthDialog = ({ open, onClose }) => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Register
@@ -37,23 +37,28 @@ const AuthDialog = ({ open, onClose }) => {
       let response;
 
       if (isLogin) {
-        // Login API call
-        response = await axios.post(
-          "https://mindhavenbackend.vercel.app/api/login",
-          { email, password },
-          { headers: { "Content-Type": "application/json" }, withCredentials: true }
-        );
-        console.log("Login successful:", response?.data); // Use optional chaining to avoid runtime errors
-        alert(response?.data?.message || "Login successful!");
+        // Login with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        console.log("Login successful:", data);
+        alert("Login successful!");
       } else {
-        // Register API call
-        response = await axios.post(
-          "https://mindhavenbackend.vercel.app/api/register",
-          { username, email, password },
-          { headers: { "Content-Type": "application/json" }, withCredentials: true }
-        );
-        console.log("Registration successful:", response?.data);
-        alert(response?.data?.message || "Registration successful!");
+        // Register with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { username } },
+        });
+
+        if (error) throw error;
+
+        console.log("Registration successful:", data);
+        alert("Registration successful! Please check your email for verification.");
       }
 
       // Close the dialog on success
@@ -61,8 +66,8 @@ const AuthDialog = ({ open, onClose }) => {
     } catch (error) {
       console.error("Error during API call:", error);
 
-      // Handle backend error message or show a generic error in dialog box
-      const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again.";
+      // Handle backend error message or show a generic error
+      const errorMessage = error.message || "An unexpected error occurred. Please try again.";
       alert(`Error: ${errorMessage}`);
     }
   };
@@ -128,7 +133,10 @@ const AuthDialog = ({ open, onClose }) => {
                   mb: 2,
                 }}
               >
-                <FormControlLabel control={<Checkbox />} label="Remember me" />
+                <FormControlLabel
+                  control={<Checkbox />}
+                  label="Remember me"
+                />
                 <Link href="#" underline="hover" color="primary">
                   Forgot password?
                 </Link>

@@ -6,7 +6,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
-import Login from "../Auth/Login"; // Import Login modal
+import Login from "../Auth/Login"; 
+import { supabase } from "../../supabaseClient"; 
 
 const Navbar = ({ user, setUser }) => {
   const [menuOpen, setMenuOpen] = useState(false);

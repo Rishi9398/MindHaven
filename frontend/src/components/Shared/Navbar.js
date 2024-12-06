@@ -31,8 +31,8 @@ const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
             />
           </div>
 
-          {/* Desktop Notification and Login */}
-          <div className="hidden lg:flex items-center gap-6">
+          {/* Right Section: Notification and Login/Logout */}
+          <div className="flex items-center gap-6">
             {/* Notification */}
             <div className="flex items-center gap-2 cursor-pointer hover:text-black">
               <NotificationsNoneIcon fontSize="medium" />
@@ -93,6 +93,7 @@ const Navbar = ({ user, onLoginClick, onLogoutClick }) => {
           </Link>
         </div>
 
+        {/* Mobile Menu */}
         {menuOpen && (
           <div className="lg:hidden mt-4 bg-gray-100 text-gray-700 rounded-lg p-4 shadow-md">
             <div className="flex flex-col gap-4">

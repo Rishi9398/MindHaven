@@ -49,15 +49,29 @@ const Tasks = () => {
     setIsSubmitting(true);
     setError(null);
 
+    // Validate formData
+    if (!formData.taskName || !formData.priority || !formData.dueDate) {
+      alert("Please fill out all fields.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const createdDate = new Date().toISOString();
     const newTask = {
-      ...formData,
+      taskName: formData.taskName,
+      priority: formData.priority,
+      dueDate: formData.dueDate,
       createdDate,
     };
 
+    console.log("Task being sent to Supabase:", newTask); // Debug task data
+
     try {
       const { data, error } = await supabase.from("tasks").insert([newTask]);
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insert error:", error.message); // Log the error
+        throw error;
+      }
 
       alert("Task added successfully");
       fetchTasks(); // Refresh task list
@@ -67,7 +81,7 @@ const Tasks = () => {
         dueDate: "",
       });
     } catch (error) {
-      console.error("Error adding task:", error.message);
+      console.error("Error adding task:", error.message); // Debug error
       setError("Failed to add task. Please try again.");
     } finally {
       setIsSubmitting(false);

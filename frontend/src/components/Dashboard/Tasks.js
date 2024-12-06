@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { allAPIs } from "../../services/allAPIs";
+import { supabase } from "../../supabaseClient"; // Import Supabase client
 
 const Tasks = () => {
   const [formData, setFormData] = useState({
@@ -20,14 +20,15 @@ const Tasks = () => {
     }));
   };
 
-  // Fetch tasks from the backend
+  // Fetch tasks from the Supabase table
   const fetchTasks = async () => {
     try {
-      const response = await allAPIs.getTasks();
-      console.log("API Response:", response.data); // Debug API response
+      const { data, error } = await supabase.from("tasks").select("*");
+      if (error) throw error;
+
       const tasksByPriority = { High: [], Medium: [], Low: [] };
 
-      response.data.forEach((task) => {
+      data.forEach((task) => {
         if (tasksByPriority[task.priority]) {
           tasksByPriority[task.priority].push(task);
         } else {
@@ -35,9 +36,9 @@ const Tasks = () => {
         }
       });
 
-      setTasks(tasksByPriority); // Update the state with fetched tasks
+      setTasks(tasksByPriority); // Update state with fetched tasks
     } catch (error) {
-      console.error("Error fetching tasks:", error.message); // Debug error
+      console.error("Error fetching tasks:", error.message);
       setError("Failed to fetch tasks. Please try again.");
     }
   };
@@ -48,25 +49,25 @@ const Tasks = () => {
     setIsSubmitting(true);
     setError(null);
 
-    const createdDate = new Date().toISOString().split("T")[0];
+    const createdDate = new Date().toISOString();
     const newTask = {
       ...formData,
       createdDate,
     };
 
     try {
-      const response = await allAPIs.createTasks(newTask);
-      if (response.status === 201) {
-        alert("Task added successfully");
-        fetchTasks(); // Refresh task list
-        setFormData({
-          taskName: "",
-          priority: "Medium",
-          dueDate: "",
-        });
-      }
+      const { data, error } = await supabase.from("tasks").insert([newTask]);
+      if (error) throw error;
+
+      alert("Task added successfully");
+      fetchTasks(); // Refresh task list
+      setFormData({
+        taskName: "",
+        priority: "Medium",
+        dueDate: "",
+      });
     } catch (error) {
-      console.error("Error adding task:", error.message); // Debug error
+      console.error("Error adding task:", error.message);
       setError("Failed to add task. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -76,10 +77,12 @@ const Tasks = () => {
   // Handle task deletion
   const handleDeleteTask = async (id) => {
     try {
-      await allAPIs.deleteTask(id);
+      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      if (error) throw error;
+
       fetchTasks(); // Refresh task list after deletion
     } catch (error) {
-      console.error("Error deleting task:", error.message); // Debug error
+      console.error("Error deleting task:", error.message);
       setError("Failed to delete task. Please try again.");
     }
   };
@@ -159,7 +162,7 @@ const Tasks = () => {
             ) : (
               tasks[priority].map((task) => (
                 <div
-                  key={task._id}
+                  key={task.id}
                   className="border-b border-gray-300 pb-2 mb-2 flex justify-between items-center"
                 >
                   <div>
@@ -170,13 +173,13 @@ const Tasks = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => alert(`Edit task with ID: ${task._id}`)}
+                      onClick={() => alert(`Edit task with ID: ${task.id}`)}
                       className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDeleteTask(task._id)}
+                      onClick={() => handleDeleteTask(task.id)}
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                     >
                       Delete

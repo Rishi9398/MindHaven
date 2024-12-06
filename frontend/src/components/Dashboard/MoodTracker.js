@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
 
 const MoodTracker = () => {
@@ -8,17 +8,36 @@ const MoodTracker = () => {
   const [moodEntries, setMoodEntries] = useState([]);
   const [username, setUsername] = useState('');
 
-  useEffect(() => {
-    fetchUserInfo();
-    fetchMoodEntries();
-  }, []);
-
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     const user = supabase.auth.user();
     if (user) {
       setUsername(user.email); // Assuming email as username
     }
-  };
+  }, []);
+
+  const fetchMoodEntries = useCallback(async () => {
+    if (!username) return;
+
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .select('*')
+      .eq('username', username)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching mood entries:', error);
+    } else {
+      setMoodEntries(data);
+    }
+  }, [username]);
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [fetchUserInfo]);
+
+  useEffect(() => {
+    fetchMoodEntries();
+  }, [fetchMoodEntries]);
 
   const handleMoodChange = (e) => {
     const value = parseInt(e.target.value, 10);
@@ -63,22 +82,6 @@ const MoodTracker = () => {
       alert('Mood Saved!');
       setJournalEntry('');
       fetchMoodEntries();
-    }
-  };
-
-  const fetchMoodEntries = async () => {
-    if (!username) return;
-
-    const { data, error } = await supabase
-      .from('mood_entries')
-      .select('*')
-      .eq('username', username)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      alert('Error fetching mood entries!');
-    } else {
-      setMoodEntries(data);
     }
   };
 

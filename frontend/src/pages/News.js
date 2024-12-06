@@ -21,9 +21,10 @@ const News = () => {
       }
       setLoading(false);
     };
-
+  
     fetchNews();
-  }, []);
+  }, [API_URL]); 
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 via-white to-blue-50 py-8 px-4">

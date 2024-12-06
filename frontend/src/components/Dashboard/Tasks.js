@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../../supabaseClient"; // Import Supabase client
 
-const Tasks = () => {
+const TaskDashboard = () => {
   const [formData, setFormData] = useState({
-    taskName: "",
+    title: "",
     priority: "Medium",
-    dueDate: "",
+    deadline: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [tasks, setTasks] = useState({ High: [], Medium: [], Low: [] });
+  const [taskList, setTaskList] = useState({ High: [], Medium: [], Low: [] });
   const [user, setUser] = useState(null); // Track logged-in user
 
   // Track real-time login/logout
@@ -43,9 +43,9 @@ const Tasks = () => {
 
     try {
       const { data, error } = await supabase
-        .from("tasks")
+        .from("task_entries") // Assuming the table is named "task_entries"
         .select("*")
-        .eq("email", user.email); // Fetch tasks for the logged-in user
+        .eq("user_email", user.email); // Fetch tasks for the logged-in user
       if (error) throw error;
 
       const tasksByPriority = { High: [], Medium: [], Low: [] };
@@ -58,7 +58,7 @@ const Tasks = () => {
         }
       });
 
-      setTasks(tasksByPriority);
+      setTaskList(tasksByPriority);
     } catch (error) {
       console.error("Error fetching tasks:", error.message);
       setError("Failed to fetch tasks. Please try again.");
@@ -67,25 +67,25 @@ const Tasks = () => {
 
   // Add task to Supabase
   const addTaskToSupabase = async () => {
-    const createdDate = new Date().toISOString();
+    const createdAt = new Date().toISOString();
     const newTask = {
-      taskName: formData.taskName,
+      title: formData.title,
       priority: formData.priority,
-      dueDate: formData.dueDate,
-      createdDate,
-      email: user.email, // Associate task with logged-in user's email
+      deadline: formData.deadline,
+      created_at: createdAt,
+      user_email: user.email, // Associate task with logged-in user's email
     };
 
     try {
-      const { error } = await supabase.from("tasks").insert([newTask]);
+      const { error } = await supabase.from("task_entries").insert([newTask]);
       if (error) throw error;
 
       alert("Task added successfully");
       fetchTasks(); // Refresh tasks
       setFormData({
-        taskName: "",
+        title: "",
         priority: "Medium",
-        dueDate: "",
+        deadline: "",
       });
     } catch (error) {
       console.error("Error adding task:", error.message);
@@ -98,7 +98,7 @@ const Tasks = () => {
   // Delete task from Supabase
   const deleteTaskFromSupabase = async (id) => {
     try {
-      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      const { error } = await supabase.from("task_entries").delete().eq("id", id);
       if (error) throw error;
 
       fetchTasks(); // Refresh tasks after deletion
@@ -142,9 +142,9 @@ const Tasks = () => {
           >
             <input
               type="text"
-              name="taskName"
-              placeholder="Enter Task"
-              value={formData.taskName}
+              name="title"
+              placeholder="Enter Task Title"
+              value={formData.title}
               onChange={handleInputChange}
               required
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -164,8 +164,8 @@ const Tasks = () => {
 
             <input
               type="date"
-              name="dueDate"
-              value={formData.dueDate}
+              name="deadline"
+              value={formData.deadline}
               onChange={handleInputChange}
               required
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -191,18 +191,18 @@ const Tasks = () => {
         {["High", "Medium", "Low"].map((priority) => (
           <div key={priority} className="w-full bg-neutral-100 shadow-lg p-4">
             <h3 className="text-xl font-bold mb-4">{priority} Priority Tasks</h3>
-            {tasks[priority].length === 0 ? (
+            {taskList[priority].length === 0 ? (
               <p>No tasks available</p>
             ) : (
-              tasks[priority].map((task) => (
+              taskList[priority].map((task) => (
                 <div
                   key={task.id}
                   className="border-b border-gray-300 pb-2 mb-2 flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-semibold">{task.taskName}</p>
+                    <p className="font-semibold">{task.title}</p>
                     <p className="text-sm text-gray-600">
-                      Due: {task.dueDate.split("T")[0]}
+                      Due: {task.deadline.split("T")[0]}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -223,4 +223,4 @@ const Tasks = () => {
   );
 };
 
-export default Tasks;
+export default TaskDashboard;

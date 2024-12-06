@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; // Single import from react-router-dom
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
 import Navbar from "./components/Shared/Navbar";
 import Footer from "./components/Shared/Footer";
 import SOS from "./pages/SOS.js";
@@ -10,9 +10,7 @@ import Chatbot from "./components/Shared/Chatbot";
 import VideoRecommendation from "./pages/VideoRecommendation";
 import Assignment from "./pages/Assignment";
 import MoodTracker from "./components/Dashboard/MoodTracker.js";
-import Main from "./index.jsx";
-import Signup from "./components/Signup";
-import Login from "./components/Login";
+
 
 const App = () => {
   const user = null; 

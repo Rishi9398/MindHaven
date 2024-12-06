@@ -1,23 +1,29 @@
-import React, { useState } from 'react';
-import { Box, Typography, Slider, TextField, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 
 const MoodTracker = () => {
-  const [moodValue, setMoodValue] = useState(50); // Default value for the slider
+  const [moodValue, setMoodValue] = useState(50);
   const [journalEntry, setJournalEntry] = useState('');
-  const [moodDescription, setMoodDescription] = useState('Neutral 🙂 Neither happy nor sad, feeling indifferent. Just going through the motions of the day.');
+  const [moodDescription, setMoodDescription] = useState('Neutral 🙂 Neither happy nor sad.');
+  const [moodEntries, setMoodEntries] = useState([]);
 
-  const handleMoodChange = (event, newValue) => {
-    setMoodValue(newValue);
-    updateMoodDescription(newValue);
+  useEffect(() => {
+    fetchMoodEntries();
+  }, []);
+
+  const handleMoodChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    setMoodValue(value);
+    updateMoodDescription(value);
   };
 
   const updateMoodDescription = (value) => {
     if (value <= 20) {
-      setMoodDescription('Sad 😞 Feeling down or upset. It might help to talk to someone.');
+      setMoodDescription('Sad 😞 Feeling down or upset.');
     } else if (value <= 40) {
       setMoodDescription('Low 😕 Not feeling great, but managing.');
     } else if (value <= 60) {
-      setMoodDescription('Neutral 🙂 Neither happy nor sad, feeling indifferent. Just going through the motions of the day.');
+      setMoodDescription('Neutral 🙂 Neither happy nor sad.');
     } else if (value <= 80) {
       setMoodDescription('Good 😊 Feeling positive and content.');
     } else {
@@ -25,71 +31,103 @@ const MoodTracker = () => {
     }
   };
 
-  const handleSaveEntry = () => {
-    alert(`Mood Saved! \nMood: ${moodDescription}\nJournal Entry: ${journalEntry}`);
-    setJournalEntry('');
+  const handleSaveEntry = async () => {
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .insert([{ mood_value: moodValue, mood_description: moodDescription, journal_entry: journalEntry }]);
+
+    if (error) {
+      alert('Error saving mood entry!');
+    } else {
+      alert('Mood Saved!');
+      setJournalEntry('');
+      fetchMoodEntries();
+    }
+  };
+
+  const fetchMoodEntries = async () => {
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      alert('Error fetching mood entries!');
+    } else {
+      setMoodEntries(data);
+    }
+  };
+
+  const handleDeleteEntry = async (id) => {
+    const { error } = await supabase
+      .from('mood_entries')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Error deleting entry!');
+    } else {
+      fetchMoodEntries();
+    }
   };
 
   return (
-    <Box
-  sx={{
-    width: '80%',
-    margin: '40px auto', // Adds top and bottom spacing
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      }}
-    >
-      <Typography variant="h5" align="center" sx={{ marginBottom: '16px', fontWeight: 'bold' }}>
-        Rate Your Mood
-      </Typography>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold text-center mb-6">Mood Tracker</h1>
 
-      <Slider
-        value={moodValue}
-        onChange={handleMoodChange}
-        min={0}
-        max={100}
-        step={1}
-        sx={{ color: '#1976d2', marginBottom: '16px' }}
-      />
+      <div className="bg-white p-4 shadow rounded-md mb-6">
+        <label className="block text-sm font-medium mb-2">Rate Your Mood:</label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={moodValue}
+          onChange={handleMoodChange}
+          className="w-full"
+        />
+        <p className="text-center mt-2 text-gray-700">
+          <strong>Mood Description:</strong> {moodDescription}
+        </p>
+      </div>
 
-      <Typography variant="body1" align="center" sx={{ fontStyle: 'italic', marginBottom: '16px' }}>
-        <strong>Mood Description:</strong> {moodDescription}
-      </Typography>
+      <div className="bg-white p-4 shadow rounded-md mb-6">
+        <label className="block text-sm font-medium mb-2">Journal Entry:</label>
+        <textarea
+          value={journalEntry}
+          onChange={(e) => setJournalEntry(e.target.value)}
+          rows="4"
+          className="w-full border rounded-md p-2"
+          placeholder="Write about your day..."
+        />
+      </div>
 
-      <TextField
-        label="Journal Entry"
-        placeholder="Write about your day..."
-        multiline
-        rows={4}
-        fullWidth
-        value={journalEntry}
-        onChange={(e) => setJournalEntry(e.target.value)}
-        variant="outlined"
-        sx={{ marginBottom: '16px' }}
-      />
+      <button
+        onClick={handleSaveEntry}
+        className="bg-blue-600 text-white py-2 px-4 rounded-md w-full hover:bg-blue-700 transition"
+      >
+        Save Mood
+      </button>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSaveEntry}
-          sx={{ textTransform: 'none', padding: '8px 24px' }}
-        >
-          Save Mood
-        </Button>
-      </Box>
-
-      <Box sx={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="outlined"
-          color="success"
-          sx={{ textTransform: 'none' }}
-        >
-          View Previous Mood Reports
-        </Button>
-      </Box>
-    </Box>
+      <h2 className="text-xl font-bold mt-8 mb-4">Previous Entries</h2>
+      <div className="space-y-4">
+        {moodEntries.map((entry) => (
+          <div key={entry.id} className="bg-white p-4 shadow rounded-md">
+            <p className="text-sm text-gray-700">
+              <strong>Mood:</strong> {entry.mood_description}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong>Journal:</strong> {entry.journal_entry}
+            </p>
+            <button
+              onClick={() => handleDeleteEntry(entry.id)}
+              className="text-red-600 text-sm mt-2"
+            >
+              Delete Entry
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

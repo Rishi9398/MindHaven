@@ -6,10 +6,19 @@ const MoodTracker = () => {
   const [journalEntry, setJournalEntry] = useState('');
   const [moodDescription, setMoodDescription] = useState('Neutral 🙂 Neither happy nor sad.');
   const [moodEntries, setMoodEntries] = useState([]);
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
+    fetchUserInfo();
     fetchMoodEntries();
   }, []);
+
+  const fetchUserInfo = async () => {
+    const user = supabase.auth.user();
+    if (user) {
+      setUsername(user.email); // Assuming email as username
+    }
+  };
 
   const handleMoodChange = (e) => {
     const value = parseInt(e.target.value, 10);
@@ -32,9 +41,21 @@ const MoodTracker = () => {
   };
 
   const handleSaveEntry = async () => {
+    if (!username) {
+      alert('Please log in first.');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('mood_entries')
-      .insert([{ mood_value: moodValue, mood_description: moodDescription, journal_entry: journalEntry }]);
+      .insert([
+        { 
+          username: username, 
+          mood_value: moodValue, 
+          mood_description: moodDescription, 
+          journal_entry: journalEntry 
+        }
+      ]);
 
     if (error) {
       alert('Error saving mood entry!');
@@ -46,9 +67,12 @@ const MoodTracker = () => {
   };
 
   const fetchMoodEntries = async () => {
+    if (!username) return;
+
     const { data, error } = await supabase
       .from('mood_entries')
       .select('*')
+      .eq('username', username)
       .order('created_at', { ascending: false });
 
     if (error) {
